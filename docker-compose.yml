@@ -1,0 +1,73 @@
+services:
+
+  sensor:
+    build:
+      context: .
+      dockerfile: services/sensor/Dockerfile
+
+    container_name: honeypot-sensor
+
+    network_mode: host
+
+    cap_add:
+      - NET_RAW
+      - NET_ADMIN
+
+    environment:
+      SENSOR_INTERFACE: ${SENSOR_INTERFACE:-any}
+      HOST_ID: ${HOST_ID:-lab-host}
+      SENSOR_ID: ${SENSOR_ID:-network-sensor-01}
+      QUEUE_DIR: /shared/events
+
+    volumes:
+      - telemetry_queue:/shared/events
+
+    restart: unless-stopped
+
+  normalizer:
+    build:
+      context: .
+      dockerfile: services/normalizer/Dockerfile
+
+    container_name: honeypot-normalizer
+
+    environment:
+      HOST_ID: ${HOST_ID:-lab-host}
+      QUEUE_DIR: /shared/events
+
+    volumes:
+      - telemetry_queue:/shared/events
+
+    restart: unless-stopped
+
+    depends_on:
+      - sensor
+
+  api:
+    build:
+      context: .
+      dockerfile: services/api/Dockerfile
+
+    container_name: honeypot-api
+
+    ports:
+      - "8000:8000"
+
+    environment:
+      HOST_ID: ${HOST_ID:-lab-host}
+
+    volumes:
+      - telemetry_queue:/shared/events
+      - telemetry_data:/data
+
+    restart: unless-stopped
+
+    depends_on:
+      - normalizer
+
+
+volumes:
+
+  telemetry_queue:
+
+  telemetry_data:
