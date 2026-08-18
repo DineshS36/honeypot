@@ -82,7 +82,9 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Honeypot Telemetry API",
     version="0.1.0",
+    lifespan=lifespan,
 )
+
 
 
 @app.get("/health")
@@ -105,20 +107,6 @@ def get_events(
     return repository.list_events(limit)
 
 
-@app.get("/events/{event_id}")
-def get_event(event_id: str):
-    events = repository.list_events(1000)
-
-    for event in events:
-        if event.event_id == event_id:
-            return event
-
-    raise HTTPException(
-        status_code=404,
-        detail="Event not found",
-    )
-
-
 @app.get("/events/stream")
 async def event_stream():
 
@@ -137,3 +125,17 @@ async def event_stream():
             "X-Accel-Buffering": "no",
         },
     )
+
+
+@app.get("/events/{event_id}")
+def get_event(event_id: str):
+    events = repository.list_events(1000)
+
+    for event in events:
+        if event.event_id == event_id:
+            return event
+
+    raise HTTPException(
+        status_code=404,
+        detail="Event not found",
+    )
