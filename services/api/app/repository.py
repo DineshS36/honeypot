@@ -58,3 +58,19 @@ class EventRepository:
             TelemetryEvent.model_validate_json(row["payload_json"])
             for row in rows
         ]
+
+    def get_by_id(self, event_id: str) -> TelemetryEvent | None:
+        with connect() as conn:
+            row = conn.execute(
+                """
+                SELECT payload_json
+                FROM events
+                WHERE event_id = ?
+                """,
+                (event_id,),
+            ).fetchone()
+
+        if not row:
+            return None
+
+        return TelemetryEvent.model_validate_json(row["payload_json"])

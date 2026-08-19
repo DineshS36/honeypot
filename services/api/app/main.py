@@ -40,9 +40,15 @@ async def ingestion_loop() -> None:
                 handle.seek(offset)
 
                 while True:
+                    line_start = handle.tell()
                     line = handle.readline()
 
                     if not line:
+                        break
+
+                    # Incomplete line check: wait for producer to complete writing line
+                    if not (line.endswith("\n") or line.endswith("\r")):
+                        offset = line_start
                         break
 
                     offset = handle.tell()
@@ -84,7 +90,6 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan,
 )
-
 
 
 @app.get("/health")
@@ -129,13 +134,12 @@ async def event_stream():
 
 @app.get("/events/{event_id}")
 def get_event(event_id: str):
-    events = repository.list_events(1000)
-
-    for event in events:
-        if event.event_id == event_id:
-            return event
+    event = repository.get_by_id(event_id)
+    if event:
+        return event
 
     raise HTTPException(
         status_code=404,
         detail="Event not found",
-    )
+    )
+

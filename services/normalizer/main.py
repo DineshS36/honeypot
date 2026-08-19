@@ -104,8 +104,8 @@ def normalize_event(raw_data: dict[str, Any]) -> TelemetryEvent:
     event_type = EventType(event_type_val)
 
     # 4. Host ID & Sensor ID
-    host_id = raw_data.get("host_id")
-    sensor_id = raw_data.get("sensor_id")
+    host_id = raw_data.get("host_id") or os.getenv("HOST_ID", "lab-host")
+    sensor_id = raw_data.get("sensor_id") or os.getenv("SENSOR_ID", "network-sensor-01")
 
     # 5. Network Metadata
     network: NetworkMetadata | None = None

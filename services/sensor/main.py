@@ -80,14 +80,11 @@ def extract_packet(packet) -> dict:
 def append_raw(event: dict) -> None:
     QUEUE_DIR.mkdir(parents=True, exist_ok=True)
 
-    temporary = RAW_FILE.with_suffix(".tmp")
-
-    with temporary.open("a", encoding="utf-8") as handle:
+    with RAW_FILE.open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(event) + "\n")
         handle.flush()
         os.fsync(handle.fileno())
 
-    temporary.replace(RAW_FILE)
 
 
 def handle_packet(packet) -> None:
